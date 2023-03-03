@@ -1,4 +1,3 @@
 (tests
- (names lab1 lab2_1)
- (libraries tipl ounit2)
-)
+ (names lab1 lab2_1 lab4)
+ (libraries tipl ounit2))
