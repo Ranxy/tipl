@@ -26,7 +26,6 @@ end
 type var = Para of string | Local of string | Temp
 type venv = expr list
 
-
 let rec remove_funs expr : Flat.expr =
   match expr with
   | Cst i -> Cst i
@@ -140,3 +139,29 @@ let compile_to_vm prog =
 
 let exec_vm vm = run vm
 let compile_and_exec prog = prog |> compile_to_vm |> exec_vm
+
+let compile_encode prog =
+  let vm_code = prog |> pre_process |> compile |> Array.of_list in
+  let encoded, _ = vm_code |> encode in
+  (* for x = 0 to Array.length encoded - 1 do
+    Printf.printf "%d, " encoded.(x)
+  done;
+  print_newline (); *)
+  let init_pc = vm_code |> getInitPc in
+  (encoded, init_pc)
+
+let compile_encode_and_exec prog =
+  let encoded, init_pc = prog |> compile_encode in
+  let vm = RealVm.initVm encoded init_pc in
+  RealVm.run vm
+
+let compile_encode_and_write prog file_name =
+  let encoded, init_pc = prog |> compile_encode in
+  let out_channel = open_out_bin file_name in
+  output_string out_channel (string_of_int init_pc);
+  output_string out_channel ";";
+  for x = 0 to Array.length encoded - 1 do
+    output_string out_channel (string_of_int encoded.(x));
+    output_string out_channel ","
+  done;
+  close_out out_channel

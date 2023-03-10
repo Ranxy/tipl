@@ -86,13 +86,20 @@ let test_fact = fact (App ("fact", [ Cst 5 ]))
 let test_sum = sum (App ("sum", [ Cst 5 ]))
 let test_fib = fib (App ("fib", [ Cst 7 ]))
 
-let test_exec _ =
-  assert_equal (compile_and_exec test_sum) 15;
-  assert_equal (compile_and_exec test_fact) 120;
-  assert_equal (compile_and_exec test_fib) 21;
-  assert_equal (compile_and_exec test_fact_tail) 24;
-  assert_equal (compile_and_exec test_cube_square) 8 ~printer:string_of_int;
+let assert_exec_one fn expr value =
+  assert_equal value (fn expr) ~printer:string_of_int;
   ()
+
+let assert_exec fn =
+  assert_exec_one fn test_sum 15;
+  assert_exec_one fn test_fact 120;
+  assert_exec_one fn test_fib 21;
+  assert_exec_one fn test_fact_tail 24;
+  assert_exec_one fn test_cube_square 8;
+  ()
+
+let test_exec _ = assert_exec compile_and_exec
+let test_encode_exec _ = assert_exec compile_encode_and_exec
 
 let test_insertToArrayInPlace_basic _ =
   let arr = [| 1; 2; 3; 4; 5; 0; 0; 0 |] in
@@ -102,11 +109,15 @@ let test_insertToArrayInPlace_basic _ =
   insertToArrayInPlace pos add arr;
   assert_equal expected arr
 
+let test_write _ = compile_encode_and_write test_sum "testfile.txt"
+
 let suite =
   "suite"
   >::: [
          "test_insertToArrayInPlace_basic" >:: test_insertToArrayInPlace_basic;
          "test_exec_sum" >:: test_exec;
+         "test_encode" >:: test_encode_exec;
+         "test_write" >:: test_write;
        ]
 
 let () = run_test_tt_main suite
